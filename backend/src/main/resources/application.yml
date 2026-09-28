@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: spring-ai-debate-arquitetura
+  ai:
+    model:
+      # google-genai (padrão) ou anthropic
+      chat: ${CHAT_PROVIDER:google-genai}
+      embedding:
+        text: none
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY:}
+        chat:
+          options:
+            model: gemini-3.8-flash
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY:}
+      chat:
+        options:
+          # Claude Opus 5 não aceita temperature (400), por isso ela não é definida aqui.
+          model: claude-opus-5
+          max-tokens: 16000
+
+app:
+  debate:
+    # Com Claude, defina os três como claude-opus-5 (ou outro modelo Claude).
+    modelo-arbitro: ${MODELO_ARBITRO:gemini-3.1-pro-preview}
+    modelo-a: ${MODELO_A:gemini-3.8-flash}
+    modelo-b: ${MODELO_B:gemini-3.5-flash}
+    rodadas-maximas: 3
+    limite-eco: 0.6
+
+server:
+  port: ${PORT:8080}

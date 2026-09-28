@@ -1,0 +1,16 @@
+# Modelo real desligado; os testes usam um modelo falso que responde por papel.
+spring:
+  ai:
+    model:
+      chat: none
+    google:
+      genai:
+        api-key: chave-de-teste
+    anthropic:
+      api-key: chave-de-teste
+
+app:
+  debate:
+    modelo-arbitro: arbitro-teste
+    modelo-a: a-teste
+    modelo-b: b-teste

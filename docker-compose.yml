@@ -1,0 +1,14 @@
+#   export GEMINI_API_KEY=sua-chave
+#   docker compose up --build
+services:
+  app:
+    build: .
+    environment:
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      CHAT_PROVIDER: ${CHAT_PROVIDER:-google-genai}
+      MODELO_ARBITRO: ${MODELO_ARBITRO:-gemini-3.1-pro-preview}
+      MODELO_A: ${MODELO_A:-gemini-3.8-flash}
+      MODELO_B: ${MODELO_B:-gemini-3.5-flash}
+    ports:
+      - "8080:8080"
