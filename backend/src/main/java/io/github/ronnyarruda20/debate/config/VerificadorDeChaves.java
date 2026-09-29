@@ -33,6 +33,19 @@ public class VerificadorDeChaves implements EnvironmentPostProcessor, Ordered {
     static List<String> faltando(ConfigurableEnvironment env) {
         String chat = env.getProperty("spring.ai.model.chat", GEMINI);
         List<String> faltando = new ArrayList<>();
+        boolean todosComEndereco = true;
+        for (String papel : List.of("arbitro", "a", "b")) {
+            String prefixo = "app.debate.endpoints." + papel + ".";
+            if (!StringUtils.hasText(env.getProperty(prefixo + "base-url"))) {
+                todosComEndereco = false;
+            } else if (!StringUtils.hasText(env.getProperty(prefixo + "api-key"))) {
+                faltando.add("CHAVE_" + papel.toUpperCase());
+            }
+        }
+        if (todosComEndereco) {
+            // Cada papel tem o próprio endereço; o provedor principal não é usado.
+            return faltando;
+        }
         if (GEMINI.equals(chat)
                 && !StringUtils.hasText(env.getProperty("spring.ai.google.genai.api-key"))) {
             faltando.add("GEMINI_API_KEY");

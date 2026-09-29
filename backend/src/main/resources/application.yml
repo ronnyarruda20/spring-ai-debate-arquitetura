@@ -42,6 +42,18 @@ app:
     modelo-b: ${MODELO_B:gemini-3.5-flash}
     rodadas-maximas: 3
     limite-eco: 0.6
+    # Opcional: endereço próprio por papel (API compatível com a da OpenAI), para pôr provedores
+    # diferentes no mesmo debate. Sem URL, o papel usa o provedor de CHAT_PROVIDER.
+    endpoints:
+      arbitro:
+        base-url: ${URL_ARBITRO:}
+        api-key: ${CHAVE_ARBITRO:}
+      a:
+        base-url: ${URL_A:}
+        api-key: ${CHAVE_A:}
+      b:
+        base-url: ${URL_B:}
+        api-key: ${CHAVE_B:}
 
 server:
   port: ${PORT:8080}

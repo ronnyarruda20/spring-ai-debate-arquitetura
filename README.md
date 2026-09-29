@@ -37,7 +37,7 @@ sequenceDiagram
 
 ## Decisões de implementação
 
-- **Um modelo por papel.** O árbitro usa o modelo mais forte; os advogados usam modelos diferentes entre si, para o debate não ser a mesma voz discutindo consigo mesma. No Spring AI 2 isso é um `ChatClient` por papel, com as opções do provedor trocando só o modelo. Ver [`DebateConfig`](backend/src/main/java/io/github/ronnyarruda20/debate/config/DebateConfig.java).
+- **Um modelo por papel, e até um provedor por papel.** O árbitro usa o modelo mais forte; os advogados usam modelos diferentes entre si, para o debate não ser a mesma voz discutindo consigo mesma. No Spring AI 2 isso é um `ChatClient` por papel, com as opções do provedor trocando só o modelo; um papel com endereço próprio ganha um `OpenAiChatModel` só dele, o que põe DeepSeek contra Gemini no mesmo debate. Ver [`DebateConfig`](backend/src/main/java/io/github/ronnyarruda20/debate/config/DebateConfig.java).
 - **Saída estruturada onde importa.** O enquadramento e o ADR voltam como JSON validado contra records Java; as falas do debate são texto livre, porque ali a forma não importa.
 - **Filtro anti-eco.** Se um lado começa a repetir o que já disse, medido pela similaridade de Jaccard entre as falas, o debate para e vai direto ao árbitro, sem gastar mais chamadas. A ideia veio de um projeto meu anterior, de GPT conversando com GPT, em que o filtro encerrava a conversa quando os dois entravam em eco. Ver [`FiltroAntiEco`](backend/src/main/java/io/github/ronnyarruda20/debate/dominio/FiltroAntiEco.java).
 - **Advogados que admitem fraquezas.** As instruções pedem que cada lado responda ao argumento mais recente do outro e reconheça os pontos fracos da própria opção, dizendo como mitigá-los. Isso rende um debate útil em vez de dois monólogos.
@@ -63,10 +63,22 @@ Abra <http://localhost:8080>, escolha um dos exemplos ou descreva a sua decisão
 | `CHAT_PROVIDER` | `google-genai` | `anthropic` para usar Claude; defina então os três modelos, por exemplo `claude-opus-5`, e `ANTHROPIC_API_KEY`. `openai` para qualquer API compatível com a da OpenAI (veja abaixo). |
 | `OPENAI_BASE_URL` | `https://api.openai.com/v1` | Endereço da API compatível, com `CHAT_PROVIDER=openai`. |
 | `OPENAI_API_KEY` | | Chave dessa API. |
+| `URL_A`, `CHAVE_A` | | Endereço e chave próprios do lado A. Idem `URL_B`/`CHAVE_B` e `URL_ARBITRO`/`CHAVE_ARBITRO`. |
 
-### Modelos de provedores diferentes no mesmo debate
+### Um provedor diferente em cada lado
 
-**Só DeepSeek**, direto na API deles (testado: duas rodadas e o ADR em cerca de um minuto e meio):
+O debate fica mais interessante quando os lados vêm de famílias de modelos diferentes, porque um não compartilha os vieses do outro. Qualquer papel pode ter o próprio endereço, de uma API compatível com a da OpenAI; os papéis sem endereço usam o provedor de `CHAT_PROVIDER`.
+
+**DeepSeek contra Gemini** (testado: duas rodadas e o ADR em menos de um minuto):
+
+```bash
+export GEMINI_API_KEY=sua-chave                     # lado B e árbitro, pelo provedor principal
+export MODELO_B=gemini-3.8-flash MODELO_ARBITRO=gemini-3.1-pro-preview
+export URL_A=https://api.deepseek.com/v1 CHAVE_A=$DEEPSEEK_API_KEY MODELO_A=deepseek-flash
+docker compose up --build
+```
+
+**Só DeepSeek** (testado):
 
 ```bash
 export CHAT_PROVIDER=openai OPENAI_BASE_URL=https://api.deepseek.com/v1 OPENAI_API_KEY=$DEEPSEEK_API_KEY
@@ -74,17 +86,7 @@ export MODELO_A=deepseek-flash MODELO_B=deepseek-v4-pro MODELO_ARBITRO=deepseek-
 docker compose up --build
 ```
 
-**Provedores misturados.** Com `CHAT_PROVIDER=openai` apontando para um roteador de modelos, cada papel pode vir de um provedor diferente, porque o roteador escolhe o provedor pelo nome do modelo. Assim dá para pôr, por exemplo, DeepSeek contra Gemini, com Claude de árbitro. Exemplo com o [9router](https://github.com/decolua/9router) rodando na sua máquina:
-
-```bash
-export CHAT_PROVIDER=openai
-export OPENAI_BASE_URL=http://host.docker.internal:20128/v1   # fora do Docker: http://localhost:20128/v1
-export OPENAI_API_KEY=chave-do-9router
-export MODELO_A=deepseek-flash MODELO_B=gemini-3.8-flash MODELO_ARBITRO=claude-opus-5
-docker compose up --build
-```
-
-Os nomes dos modelos são os que o roteador expõe em `/v1/models`. O mesmo vale para o OpenRouter, para a API do DeepSeek (`https://api.deepseek.com/v1`) e para o Ollama (`http://host.docker.internal:11434/v1`).
+O mesmo vale para o OpenRouter, para o Ollama (`http://host.docker.internal:11434/v1`) e para roteadores locais como o [9router](https://github.com/decolua/9router) (`http://host.docker.internal:20128/v1`), que escolhem o provedor pelo nome do modelo. Os nomes aceitos são os que cada endereço lista em `/v1/models`.
 
 **Pela API** (Server-Sent Events):
 
@@ -103,7 +105,7 @@ cd frontend && npm install && npx ng serve     # interface em :4200, com proxy p
 ## Testes
 
 ```bash
-cd backend && mvn verify          # 16 testes
+cd backend && mvn verify          # 21 testes
 cd frontend && npx ng test        # 7 testes
 ```
 
@@ -112,7 +114,6 @@ Um modelo falso reconhece o papel pelas instruções (árbitro enquadrando, lado
 ## Limitações
 
 - O ADR é um rascunho: a decisão depende do contexto que você dá, e o árbitro também é um modelo.
-- Com um provedor só, os dois lados vêm da mesma família de modelos. Para misturar famílias, use um roteador compatível com a API da OpenAI, como mostrado acima.
 
 ## Stack
 
