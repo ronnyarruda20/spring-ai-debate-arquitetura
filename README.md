@@ -60,7 +60,31 @@ Abra <http://localhost:8080>, escolha um dos exemplos ou descreva a sua decisão
 | `MODELO_ARBITRO` | `gemini-3.1-pro-preview` | Enquadra e escreve o ADR. |
 | `MODELO_A` | `gemini-3.8-flash` | Defende a primeira opção. |
 | `MODELO_B` | `gemini-3.5-flash` | Defende a segunda. |
-| `CHAT_PROVIDER` | `google-genai` | `anthropic` para usar Claude; defina então os três modelos, por exemplo `claude-opus-5`, e `ANTHROPIC_API_KEY`. |
+| `CHAT_PROVIDER` | `google-genai` | `anthropic` para usar Claude; defina então os três modelos, por exemplo `claude-opus-5`, e `ANTHROPIC_API_KEY`. `openai` para qualquer API compatível com a da OpenAI (veja abaixo). |
+| `OPENAI_BASE_URL` | `https://api.openai.com/v1` | Endereço da API compatível, com `CHAT_PROVIDER=openai`. |
+| `OPENAI_API_KEY` | | Chave dessa API. |
+
+### Modelos de provedores diferentes no mesmo debate
+
+**Só DeepSeek**, direto na API deles (testado: duas rodadas e o ADR em cerca de um minuto e meio):
+
+```bash
+export CHAT_PROVIDER=openai OPENAI_BASE_URL=https://api.deepseek.com/v1 OPENAI_API_KEY=$DEEPSEEK_API_KEY
+export MODELO_A=deepseek-flash MODELO_B=deepseek-v4-pro MODELO_ARBITRO=deepseek-v4-pro
+docker compose up --build
+```
+
+**Provedores misturados.** Com `CHAT_PROVIDER=openai` apontando para um roteador de modelos, cada papel pode vir de um provedor diferente, porque o roteador escolhe o provedor pelo nome do modelo. Assim dá para pôr, por exemplo, DeepSeek contra Gemini, com Claude de árbitro. Exemplo com o [9router](https://github.com/decolua/9router) rodando na sua máquina:
+
+```bash
+export CHAT_PROVIDER=openai
+export OPENAI_BASE_URL=http://host.docker.internal:20128/v1   # fora do Docker: http://localhost:20128/v1
+export OPENAI_API_KEY=chave-do-9router
+export MODELO_A=deepseek-flash MODELO_B=gemini-3.8-flash MODELO_ARBITRO=claude-opus-5
+docker compose up --build
+```
+
+Os nomes dos modelos são os que o roteador expõe em `/v1/models`. O mesmo vale para o OpenRouter, para a API do DeepSeek (`https://api.deepseek.com/v1`) e para o Ollama (`http://host.docker.internal:11434/v1`).
 
 **Pela API** (Server-Sent Events):
 
@@ -88,11 +112,11 @@ Um modelo falso reconhece o papel pelas instruções (árbitro enquadrando, lado
 ## Limitações
 
 - O ADR é um rascunho: a decisão depende do contexto que você dá, e o árbitro também é um modelo.
-- Os dois lados vêm da mesma família de modelos. Com as chaves de dois provedores, dá para pôr Gemini contra Claude trocando os modelos por papel.
+- Com um provedor só, os dois lados vêm da mesma família de modelos. Para misturar famílias, use um roteador compatível com a API da OpenAI, como mostrado acima.
 
 ## Stack
 
-Java 21 · Spring Boot 4.0 · Spring AI 2.0 (`ChatClient` por papel, saída estruturada) · Gemini e Claude · Angular 21 · Vitest · GitHub Actions · Docker
+Java 21 · Spring Boot 4.0 · Spring AI 2.0 (`ChatClient` por papel, saída estruturada) · Gemini, Claude e APIs compatíveis com a OpenAI · Angular 21 · Vitest · GitHub Actions · Docker
 
 ## Licença
 

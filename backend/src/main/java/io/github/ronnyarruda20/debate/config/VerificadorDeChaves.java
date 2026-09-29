@@ -18,6 +18,7 @@ public class VerificadorDeChaves implements EnvironmentPostProcessor, Ordered {
 
     static final String GEMINI = "google-genai";
     static final String ANTHROPIC = "anthropic";
+    static final String OPENAI = "openai";
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment env, SpringApplication app) {
@@ -38,6 +39,9 @@ public class VerificadorDeChaves implements EnvironmentPostProcessor, Ordered {
         }
         if (ANTHROPIC.equals(chat) && !StringUtils.hasText(env.getProperty("spring.ai.anthropic.api-key"))) {
             faltando.add("ANTHROPIC_API_KEY");
+        }
+        if (OPENAI.equals(chat) && !StringUtils.hasText(env.getProperty("spring.ai.openai.api-key"))) {
+            faltando.add("OPENAI_API_KEY");
         }
         return faltando;
     }

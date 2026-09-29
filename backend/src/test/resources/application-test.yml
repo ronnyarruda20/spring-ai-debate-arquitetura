@@ -8,6 +8,8 @@ spring:
         api-key: chave-de-teste
     anthropic:
       api-key: chave-de-teste
+    openai:
+      api-key: chave-de-teste
 
 app:
   debate:

@@ -6,9 +6,14 @@ services:
     environment:
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # Um roteador rodando na sua máquina (9router, Ollama) é visto como host.docker.internal.
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
       CHAT_PROVIDER: ${CHAT_PROVIDER:-google-genai}
       MODELO_ARBITRO: ${MODELO_ARBITRO:-gemini-3.1-pro-preview}
       MODELO_A: ${MODELO_A:-gemini-3.8-flash}
       MODELO_B: ${MODELO_B:-gemini-3.5-flash}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "8080:8080"

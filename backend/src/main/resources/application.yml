@@ -3,10 +3,15 @@ spring:
     name: spring-ai-debate-arquitetura
   ai:
     model:
-      # google-genai (padrão) ou anthropic
+      # google-genai (padrão), anthropic ou openai (qualquer API compatível com a da OpenAI)
       chat: ${CHAT_PROVIDER:google-genai}
       embedding:
         text: none
+      image: none
+      moderation: none
+      audio:
+        speech: none
+        transcription: none
     google:
       genai:
         api-key: ${GEMINI_API_KEY:}
@@ -20,6 +25,14 @@ spring:
           # Claude Opus 5 não aceita temperature (400), por isso ela não é definida aqui.
           model: claude-opus-5
           max-tokens: 16000
+    # Também serve para roteadores e provedores compatíveis: 9router, OpenRouter, DeepSeek, Ollama.
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
+      chat:
+        model: ${MODELO_A:gpt-5.5}
+        # O ADR do árbitro pode passar de um minuto em modelos de raciocínio.
+        timeout: 180s
 
 app:
   debate:
